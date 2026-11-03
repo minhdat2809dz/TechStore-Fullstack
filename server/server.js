@@ -79,18 +79,21 @@ app.listen(PORT, async () => {
   console.log(`📊 API Health Check   : http://localhost:${PORT}/api/health`);
   console.log(`===============================================================\n`);
 
-  // Thử kết nối SQL Server
-  try {
-    await getSqlPool();
-  } catch (err) {
-    console.warn('⚠️ Cảnh báo khởi động SQL Server:', err.message);
+  // Thử kết nối SQL Server (nếu không phải chế độ thuần mongo)
+  if (process.env.DB_MODE !== 'mongo') {
+    try {
+      await getSqlPool();
+    } catch (err) {
+      console.warn('⚠️ Cảnh báo khởi động SQL Server:', err.message);
+    }
   }
 
-  // Thử kết nối MongoDB
+  // Thử kết nối MongoDB và tự động nạp dữ liệu mẫu nếu DB trống
   try {
     await getMongoDb();
+    const seedMongo = require('./scripts/seed_mongo');
+    await seedMongo();
   } catch (err) {
     console.warn('⚠️ Cảnh báo khởi động MongoDB:', err.message);
   }
 });
-

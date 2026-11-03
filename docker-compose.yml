@@ -1,6 +1,17 @@
 version: '3.8'
 
 services:
+  mongo:
+    image: mongo:6.0
+    container_name: techstore-mongo
+    restart: always
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - techstore-network
+
   web:
     build: .
     container_name: techstore-app
@@ -10,5 +21,17 @@ services:
     environment:
       - PORT=5000
       - NODE_ENV=production
-    env_file:
-      - .env
+      - MONGO_URI=mongodb://mongo:27017
+      - MONGO_DATABASE=TechStoreDB
+      - DB_MODE=mongo
+    depends_on:
+      - mongo
+    networks:
+      - techstore-network
+
+networks:
+  techstore-network:
+    driver: bridge
+
+volumes:
+  mongo_data:
