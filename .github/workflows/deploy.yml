@@ -1,0 +1,68 @@
+name: CI/CD Pipeline to AWS EC2
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  # ==========================================
+  # CI JOB: Kiểm tra build & test
+  # ==========================================
+  ci-build:
+    name: CI - Build & Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Test Server Syntax
+        run: node -c server/server.js
+
+  # ==========================================
+  # CD JOB: Tự động deploy lên EC2 khi merge vào main
+  # ==========================================
+  cd-deploy:
+    name: CD - Deploy to AWS EC2
+    needs: ci-build
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - name: Deploy via SSH to EC2
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: 22
+          script: |
+            # 1. Di chuyển vào thư mục dự án hoặc clone nếu chưa có
+            if [ ! -d ~/TechStore-Fullstack ]; then
+              git clone https://github.com/minhdat2809dz/TechStore-Fullstack.git ~/TechStore-Fullstack
+            fi
+            cd ~/TechStore-Fullstack
+
+            # 2. Pull mã nguồn mới nhất từ nhánh main
+            git pull origin main
+
+            # 3. Tạo file .env nếu chưa có
+            if [ ! -f .env ]; then
+              cp .env.example .env || touch .env
+            fi
+
+            # 4. Build và khởi động lại container bằng Docker Compose
+            docker compose down || true
+            docker compose up -d --build
+
+            # 5. Dọn dẹp images cũ không dùng
+            docker image prune -f
