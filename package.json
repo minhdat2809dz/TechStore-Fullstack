@@ -1,0 +1,32 @@
+{
+  "name": "techstore-fullstack",
+  "version": "1.0.0",
+  "description": "TechStore Fullstack Project with Frontend, Admin Panel, SQL Server (SQLEXPRESS2025) and MongoDB",
+  "main": "server/server.js",
+  "scripts": {
+    "start": "node server/server.js",
+    "dev": "node server/server.js",
+    "seed:sql": "node server/scripts/seed_sql.js",
+    "seed:mongo": "node server/scripts/seed_mongo.js",
+    "sync": "node server/scripts/sync_all.js"
+  },
+  "keywords": [
+    "frontend",
+    "admin",
+    "sqlserver",
+    "sqlexpress2025",
+    "mongodb",
+    "techstore",
+    "ecommerce"
+  ],
+  "author": "TechStore Dev",
+  "license": "MIT",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "mongodb": "^7.7.0",
+    "mssql": "^11.0.1"
+  }
+}
+

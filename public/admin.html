@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Hub - Quản Trị Hệ Thống TechStore (SQL Server & MongoDB)</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome 6 CDN -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <!-- Admin CSS -->
+  <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex antialiased selection:bg-indigo-500 selection:text-white">
+
+  <!-- ============================================================== -->
+  <!-- 1. ENTERPRISE SIDEBAR -->
+  <!-- ============================================================== -->
+  <aside class="w-64 bg-slate-950 border-r border-slate-800 flex flex-col justify-between p-4 flex-shrink-0">
+    <div>
+      <!-- Brand -->
+      <div class="flex items-center gap-3 px-2 py-3 mb-6">
+        <div class="w-10 h-10 rounded-2xl bg-indigo-600 flex items-center justify-center text-white text-lg shadow-lg shadow-indigo-500/20">
+          <i class="fas fa-shield-alt"></i>
+        </div>
+        <div>
+          <h2 class="font-black text-sm tracking-tight text-white flex items-center gap-1.5">
+            TECHSTORE <span class="bg-indigo-600 text-white text-[9px] px-1 py-0.5 rounded font-extrabold">ADMIN</span>
+          </h2>
+          <span class="text-[10px] text-slate-500 font-semibold tracking-wider uppercase">SQL Server + MongoDB</span>
+        </div>
+      </div>
+
+      <!-- Navigation -->
+      <nav class="space-y-1.5">
+        <button data-tab="dashboard" class="admin-nav-item flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold bg-indigo-600 text-white shadow-md shadow-indigo-200 transition w-full text-left">
+          <i class="fas fa-chart-line text-sm w-4 text-center"></i>
+          <span>Tổng Quan Dashboard</span>
+        </button>
+
+        <button data-tab="products" class="admin-nav-item flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800 transition w-full text-left">
+          <i class="fas fa-mobile-alt text-sm w-4 text-center"></i>
+          <span>Quản Lý Sản Phẩm</span>
+        </button>
+
+        <button data-tab="orders" class="admin-nav-item flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800 transition w-full text-left">
+          <i class="fas fa-boxes text-sm w-4 text-center"></i>
+          <span>Quản Lý Đơn Hàng</span>
+        </button>
+
+        <button data-tab="users" class="admin-nav-item flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800 transition w-full text-left">
+          <i class="fas fa-users text-sm w-4 text-center"></i>
+          <span>Quản Lý Người Dùng</span>
+        </button>
+
+        <button data-tab="categories" class="admin-nav-item flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800 transition w-full text-left">
+          <i class="fas fa-tags text-sm w-4 text-center"></i>
+          <span>Danh Mục Sản Phẩm</span>
+        </button>
+
+        <button data-tab="database" class="admin-nav-item flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800 transition w-full text-left">
+          <i class="fas fa-database text-sm w-4 text-center text-amber-400"></i>
+          <span class="text-amber-300 font-bold">SQL & MongoDB Center</span>
+        </button>
+      </nav>
+    </div>
+
+    <!-- Bottom Actions -->
+    <div class="pt-4 border-t border-slate-800/80 space-y-2">
+      <a href="/index.html" class="flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs font-bold text-slate-300 bg-slate-900 hover:bg-slate-800 transition">
+        <i class="fas fa-external-link-alt text-indigo-400"></i>
+        <span>Về Website Bán Hàng</span>
+      </a>
+      <div class="px-3 py-2 text-[11px] text-slate-500">
+        Phiên bản 2.5.0 - Multi-DB Engine
+      </div>
+    </div>
+  </aside>
+
+  <!-- ============================================================== -->
+  <!-- 2. MAIN ADMIN CONTENT -->
+  <!-- ============================================================== -->
+  <div class="flex-1 flex flex-col min-w-0 bg-slate-900 overflow-y-auto">
+    
+    <!-- Top Bar -->
+    <header class="h-16 border-b border-slate-800 bg-slate-950/80 backdrop-blur-md px-6 flex items-center justify-between sticky top-0 z-30">
+      <div class="flex items-center gap-3">
+        <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Hệ Thống Quản Trị</span>
+        <span class="text-slate-600">/</span>
+        <span class="text-xs font-bold text-white">TechStore Enterprise</span>
+      </div>
+
+      <div class="flex items-center gap-4">
+        <!-- Database Badge -->
+        <div id="admin-db-status"></div>
+
+        <!-- Profile -->
+        <div class="flex items-center gap-3 pl-4 border-l border-slate-800">
+          <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center font-bold text-xs uppercase shadow">
+            A
+          </div>
+          <div class="text-left hidden sm:block">
+            <div class="text-xs font-bold text-white">Quản Trị Viên VIP</div>
+            <div class="text-[10px] text-slate-400">admin@techstore.vn</div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- CONTENT TABS -->
+    <main class="p-6 sm:p-8 space-y-6">
+
+      <!-- ========================================== -->
+      <!-- TAB 1: DASHBOARD -->
+      <!-- ========================================== -->
+      <section id="tab-dashboard" class="admin-tab-content space-y-6">
+        
+        <!-- Metric Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <!-- Revenue -->
+          <div class="admin-card p-6 relative overflow-hidden group">
+            <div class="text-slate-400 text-xs font-bold uppercase tracking-wider mb-2">Tổng Doanh Thu</div>
+            <div id="stat-revenue" class="text-2xl font-black text-white">0 ₫</div>
+            <div class="text-[11px] text-emerald-400 mt-2 flex items-center gap-1 font-semibold">
+              <i class="fas fa-arrow-up"></i>
+              <span>Đơn hàng thanh toán thành công</span>
+            </div>
+            <div class="absolute right-4 top-4 w-12 h-12 rounded-2xl bg-indigo-500/15 text-indigo-400 flex items-center justify-center text-xl shadow-inner border border-indigo-500/20 group-hover:scale-110 transition-transform">
+              <i class="fas fa-coins"></i>
+            </div>
+          </div>
+
+          <!-- Orders -->
+          <div class="admin-card p-6 relative overflow-hidden group">
+            <div class="text-slate-400 text-xs font-bold uppercase tracking-wider mb-2">Tổng Đơn Hàng</div>
+            <div id="stat-orders" class="text-2xl font-black text-white">0</div>
+            <div class="text-[11px] text-indigo-400 mt-2 flex items-center gap-1 font-semibold">
+              <i class="fas fa-box"></i>
+              <span>Đồng bộ SQL & MongoDB</span>
+            </div>
+            <div class="absolute right-4 top-4 w-12 h-12 rounded-2xl bg-blue-500/15 text-blue-400 flex items-center justify-center text-xl shadow-inner border border-blue-500/20 group-hover:scale-110 transition-transform">
+              <i class="fas fa-shopping-cart"></i>
+            </div>
+          </div>
+
+          <!-- Products -->
+          <div class="admin-card p-6 relative overflow-hidden group">
+            <div class="text-slate-400 text-xs font-bold uppercase tracking-wider mb-2">Tổng Sản Phẩm</div>
+            <div id="stat-products" class="text-2xl font-black text-white">60</div>
+            <div class="text-[11px] text-emerald-400 mt-2 flex items-center gap-1 font-semibold">
+              <i class="fas fa-check-circle"></i>
+              <span>Hoạt động trên 2 Database</span>
+            </div>
+            <div class="absolute right-4 top-4 w-12 h-12 rounded-2xl bg-emerald-500/15 text-emerald-400 flex items-center justify-center text-xl shadow-inner border border-emerald-500/20 group-hover:scale-110 transition-transform">
+              <i class="fas fa-mobile-alt"></i>
+            </div>
+          </div>
+
+          <!-- Users -->
+          <div class="admin-card p-6 relative overflow-hidden group">
+            <div class="text-slate-400 text-xs font-bold uppercase tracking-wider mb-2">Người Dùng</div>
+            <div id="stat-users" class="text-2xl font-black text-white">2</div>
+            <div class="text-[11px] text-purple-400 mt-2 flex items-center gap-1 font-semibold">
+              <i class="fas fa-user-shield"></i>
+              <span>Tài khoản Quản trị & User</span>
+            </div>
+            <div class="absolute right-4 top-4 w-12 h-12 rounded-2xl bg-purple-500/15 text-purple-400 flex items-center justify-center text-xl shadow-inner border border-purple-500/20 group-hover:scale-110 transition-transform">
+              <i class="fas fa-users"></i>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2 Column Overview -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          
+          <!-- Recent Orders -->
+          <div class="lg:col-span-2 bg-slate-950 border border-slate-800 rounded-3xl p-6">
+            <div class="flex items-center justify-between mb-4">
+              <h4 class="font-extrabold text-sm text-white uppercase tracking-wider">Đơn Hàng Gần Đây</h4>
+              <button onclick="switchAdminTab('orders')" class="text-xs text-indigo-400 hover:text-indigo-300 font-semibold">Xem tất cả →</button>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full text-left">
+                <thead class="text-[11px] font-bold text-slate-400 uppercase border-b border-slate-800">
+                  <tr>
+                    <th class="py-3 px-4">Mã Đơn</th>
+                    <th class="py-3 px-4">Khách Hàng</th>
+                    <th class="py-3 px-4">Tổng Tiền</th>
+                    <th class="py-3 px-4">Trạng Thái</th>
+                    <th class="py-3 px-4">Ngày Đặt</th>
+                  </tr>
+                </thead>
+                <tbody id="recent-orders-table" class="divide-y divide-slate-800/60">
+                  <!-- Rendered by admin.js -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Category Breakdown -->
+          <div class="bg-slate-950 border border-slate-800 rounded-3xl p-6">
+            <h4 class="font-extrabold text-sm text-white uppercase tracking-wider mb-4">Phân Bổ Danh Mục SP</h4>
+            <div id="category-breakdown-bars" class="space-y-4">
+              <!-- Rendered by admin.js -->
+            </div>
+          </div>
+
+        </div>
+
+      </section>
+
+      <!-- ========================================== -->
+      <!-- TAB 2: PRODUCTS CRUD -->
+      <!-- ========================================== -->
+      <section id="tab-products" class="admin-tab-content hidden space-y-4">
+        
+        <div class="bg-slate-950 border border-slate-800 rounded-3xl p-6">
+          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+            <div>
+              <h3 class="font-extrabold text-lg text-white">Quản Lý Sản Phẩm Công Nghệ</h3>
+              <p class="text-xs text-slate-400">Thêm, sửa, xóa sản phẩm - Dữ liệu tự động đồng bộ SQL Server & MongoDB</p>
+            </div>
+
+            <button onclick="openAddProductModal()" class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl text-xs transition shadow-lg shadow-indigo-600/30 flex items-center gap-2">
+              <i class="fas fa-plus"></i>
+              <span>Thêm Sản Phẩm Mới</span>
+            </button>
+          </div>
+
+          <!-- Table -->
+          <div class="overflow-x-auto">
+            <table class="w-full text-left">
+              <thead class="text-[11px] font-bold text-slate-400 uppercase border-b border-slate-800">
+                <tr>
+                  <th class="py-3 px-4">ID</th>
+                  <th class="py-3 px-4">Sản Phẩm</th>
+                  <th class="py-3 px-4">Danh Mục</th>
+                  <th class="py-3 px-4">Giá Bán</th>
+                  <th class="py-3 px-4">Tồn Kho</th>
+                  <th class="py-3 px-4">Đã Bán</th>
+                  <th class="py-3 px-4 text-right">Thao Tác</th>
+                </tr>
+              </thead>
+              <tbody id="admin-products-table" class="divide-y divide-slate-800/60">
+                <!-- Rendered by admin.js -->
+              </tbody>
+            </table>
+          </div>
+
+          <div class="pt-4 border-t border-slate-800 text-xs text-slate-500 flex justify-between items-center">
+            <span id="admin-products-count">Đang tải...</span>
+            <span>Hiển thị tất cả sản phẩm trong CSDL</span>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ========================================== -->
+      <!-- TAB 3: ORDERS MANAGEMENT -->
+      <!-- ========================================== -->
+      <section id="tab-orders" class="admin-tab-content hidden space-y-4">
+        
+        <div class="bg-slate-950 border border-slate-800 rounded-3xl p-6">
+          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+            <div>
+              <h3 class="font-extrabold text-lg text-white">Quản Lý Đơn Hàng Khách Hàng</h3>
+              <p class="text-xs text-slate-400">Xem chi tiết đơn hàng, cập nhật trạng thái vận chuyển thời gian thực</p>
+            </div>
+            <span id="admin-orders-count" class="text-xs text-slate-400 font-bold"></span>
+          </div>
+
+          <!-- Table -->
+          <div class="overflow-x-auto">
+            <table class="w-full text-left">
+              <thead class="text-[11px] font-bold text-slate-400 uppercase border-b border-slate-800">
+                <tr>
+                  <th class="py-3 px-4">Mã Đơn</th>
+                  <th class="py-3 px-4">Khách Hàng</th>
+                  <th class="py-3 px-4">Sản Phẩm</th>
+                  <th class="py-3 px-4">Tổng Tiền</th>
+                  <th class="py-3 px-4">Hình Thức</th>
+                  <th class="py-3 px-4">Trạng Thái</th>
+                  <th class="py-3 px-4 text-right">Chi Tiết</th>
+                </tr>
+              </thead>
+              <tbody id="admin-orders-table" class="divide-y divide-slate-800/60">
+                <!-- Rendered by admin.js -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ========================================== -->
+      <!-- TAB 4: USERS MANAGEMENT -->
+      <!-- ========================================== -->
+      <section id="tab-users" class="admin-tab-content hidden space-y-4">
+        
+        <div class="bg-slate-950 border border-slate-800 rounded-3xl p-6">
+          <div class="flex justify-between items-center mb-6">
+            <div>
+              <h3 class="font-extrabold text-lg text-white">Quản Lý Tài Khoản Người Dùng</h3>
+              <p class="text-xs text-slate-400">Danh sách tài khoản Admin và Khách hàng đã đăng ký</p>
+            </div>
+            <button onclick="openModal('user-modal')" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl text-xs transition flex items-center gap-2">
+              <i class="fas fa-user-plus"></i>
+              <span>Thêm Tài Khoản</span>
+            </button>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left">
+              <thead class="text-[11px] font-bold text-slate-400 uppercase border-b border-slate-800">
+                <tr>
+                  <th class="py-3 px-4">ID</th>
+                  <th class="py-3 px-4">Tên Đăng Nhập</th>
+                  <th class="py-3 px-4">Họ Và Tên</th>
+                  <th class="py-3 px-4">Email</th>
+                  <th class="py-3 px-4">Vai Trò</th>
+                  <th class="py-3 px-4">Ngày Tạo</th>
+                </tr>
+              </thead>
+              <tbody id="admin-users-table" class="divide-y divide-slate-800/60">
+                <!-- Rendered by admin.js -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ========================================== -->
+      <!-- TAB 5: CATEGORIES -->
+      <!-- ========================================== -->
+      <section id="tab-categories" class="admin-tab-content hidden space-y-4">
+        
+        <div class="bg-slate-950 border border-slate-800 rounded-3xl p-6">
+          <div class="flex justify-between items-center mb-6">
+            <div>
+              <h3 class="font-extrabold text-lg text-white">Quản Lý Danh Mục Ngành Hàng</h3>
+              <p class="text-xs text-slate-400">Danh mục hiển thị trên thanh tìm kiếm và bộ lọc trang chủ</p>
+            </div>
+            <button onclick="openModal('category-modal')" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl text-xs transition flex items-center gap-2">
+              <i class="fas fa-plus"></i>
+              <span>Thêm Danh Mục</span>
+            </button>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left">
+              <thead class="text-[11px] font-bold text-slate-400 uppercase border-b border-slate-800">
+                <tr>
+                  <th class="py-3 px-4">Mã Slug</th>
+                  <th class="py-3 px-4">Tên Danh Mục</th>
+                  <th class="py-3 px-4">Icon FontAwesome</th>
+                  <th class="py-3 px-4">Thứ Tự</th>
+                  <th class="py-3 px-4 text-right">Trạng Thái</th>
+                </tr>
+              </thead>
+              <tbody id="admin-categories-table" class="divide-y divide-slate-800/60">
+                <!-- Rendered by admin.js -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ========================================== -->
+      <!-- TAB 6: DATABASE CONTROL CENTER & SYNC -->
+      <!-- ========================================== -->
+      <section id="tab-database" class="admin-tab-content hidden space-y-6">
+        
+        <!-- Header Banner -->
+        <div class="bg-gradient-to-r from-slate-950 via-indigo-950 to-slate-950 border border-indigo-500/30 rounded-3xl p-6 sm:p-8">
+          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div>
+              <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/20 text-indigo-300 text-xs font-bold uppercase mb-2 border border-indigo-500/30">
+                <i class="fas fa-server"></i> Multi-Database Architecture
+              </div>
+              <h3 class="text-2xl font-black text-white">Trung Tâm Điều Khiển SQL Server & MongoDB</h3>
+              <p class="text-xs text-slate-400 mt-1 max-w-xl">
+                Giám sát tình trạng kết nối thời gian thực, chuyển đổi linh hoạt database engine và kích hoạt đồng bộ dữ liệu song song hai chiều chỉ với 1 click.
+              </p>
+            </div>
+            
+            <button onclick="refreshDatabaseStatus(); loadAdminDatabaseCenter();" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-2 border border-slate-700">
+              <i class="fas fa-sync-alt"></i>
+              <span>Làm mới kết nối</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 2 Live DB Cards -->
+        <div class="relative">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            
+            <!-- SQL Server Card -->
+            <div class="admin-card p-6 space-y-4 relative overflow-hidden">
+              <div class="absolute -right-10 -bottom-10 w-40 h-40 bg-blue-500/10 rounded-full blur-2xl pointer-events-none"></div>
+              <div class="flex justify-between items-start">
+                <div class="flex items-center gap-3">
+                  <div class="w-12 h-12 rounded-2xl bg-blue-500/15 text-blue-400 flex items-center justify-center text-xl shadow-inner border border-blue-500/20">
+                    <i class="fas fa-database"></i>
+                  </div>
+                  <div>
+                    <h4 class="font-extrabold text-sm text-white">Microsoft SQL Server 2025</h4>
+                    <div class="text-[11px] text-slate-400 font-mono">localhost\SQLEXPRESS2025</div>
+                  </div>
+                </div>
+                <div id="db-sql-status"></div>
+              </div>
+
+              <div class="space-y-2 text-xs border-t border-slate-800/80 pt-3">
+                <div class="flex justify-between">
+                  <span class="text-slate-400">Database:</span>
+                  <span class="font-bold text-white font-mono">TechStoreDB</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-slate-400">Tài khoản kết nối:</span>
+                  <span class="font-bold text-slate-300 font-mono">sa / techstore_user</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-slate-400">Độ trễ Ping:</span>
+                  <span id="db-sql-ping" class="font-bold text-emerald-400 font-mono">0 ms</span>
+                </div>
+              </div>
+
+              <!-- Table counters -->
+              <div class="pt-2">
+                <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-2">Số lượng bản ghi trong các bảng:</span>
+                <div id="db-sql-counts"></div>
+              </div>
+            </div>
+
+            <!-- MongoDB Card -->
+            <div class="admin-card p-6 space-y-4 relative overflow-hidden">
+              <div class="absolute -right-10 -bottom-10 w-40 h-40 bg-emerald-500/10 rounded-full blur-2xl pointer-events-none"></div>
+              <div class="flex justify-between items-start">
+                <div class="flex items-center gap-3">
+                  <div class="w-12 h-12 rounded-2xl bg-emerald-500/15 text-emerald-400 flex items-center justify-center text-xl shadow-inner border border-emerald-500/20">
+                    <i class="fas fa-leaf"></i>
+                  </div>
+                  <div>
+                    <h4 class="font-extrabold text-sm text-white">MongoDB Community Server</h4>
+                    <div class="text-[11px] text-slate-400 font-mono">mongodb://127.0.0.1:27017</div>
+                  </div>
+                </div>
+                <div id="db-mongo-status"></div>
+              </div>
+
+              <div class="space-y-2 text-xs border-t border-slate-800/80 pt-3">
+                <div class="flex justify-between">
+                  <span class="text-slate-400">Database:</span>
+                  <span class="font-bold text-white font-mono">TechStoreDB</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-slate-400">Cổng dịch vụ:</span>
+                  <span class="font-bold text-slate-300 font-mono">27017</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-slate-400">Độ trễ Ping:</span>
+                  <span id="db-mongo-ping" class="font-bold text-emerald-400 font-mono">0 ms</span>
+                </div>
+              </div>
+
+              <!-- Collection counters -->
+              <div class="pt-2">
+                <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-2">Số lượng document trong collection:</span>
+                <div id="db-mongo-counts"></div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Animated Connection Beam -->
+          <div class="hidden md:flex items-center justify-center my-3">
+            <div class="inline-flex items-center gap-3 px-5 py-2 rounded-full bg-slate-950 border border-indigo-500/30 text-xs font-mono text-indigo-300 shadow-xl">
+              <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping"></span>
+              <span>Kênh đồng bộ tự động 2 chiều hoạt động: SQL Server ⟷ MongoDB</span>
+              <span class="w-2.5 h-2.5 rounded-full bg-indigo-400 animate-pulse"></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mode Switcher & Sync Controls -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          
+          <!-- Engine Switcher -->
+          <div class="bg-slate-950 border border-slate-800 rounded-3xl p-6 space-y-4">
+            <h4 class="font-extrabold text-sm text-white uppercase tracking-wider flex items-center gap-2">
+              <i class="fas fa-sliders-h text-indigo-400"></i>
+              <span>Chọn Cơ Chế Hoạt Động (Engine Mode)</span>
+            </h4>
+            <p class="text-xs text-slate-400">
+              Quyết định CSDL nào sẽ đóng vai trò đọc/ghi chính cho website:
+            </p>
+
+            <div class="grid grid-cols-1 gap-2.5">
+              <button id="mode-btn-dual" onclick="handleAdminSwitchMode('dual')" class="px-4 py-2.5 rounded-xl text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-between transition">
+                <span>⚡ Chế độ DUAL SYNC (Ghi song song cả 2 DB)</span>
+                <span class="text-[10px] bg-indigo-500/20 text-indigo-300 px-2 py-0.5 rounded uppercase font-bold">Khuyên Dùng</span>
+              </button>
+
+              <button id="mode-btn-sql" onclick="handleAdminSwitchMode('sql')" class="px-4 py-2.5 rounded-xl text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-between transition">
+                <span>🗄️ Chỉ sử dụng SQL Server (SQLEXPRESS2025)</span>
+                <span class="text-[10px] bg-blue-500/20 text-blue-300 px-2 py-0.5 rounded uppercase font-bold">Relational</span>
+              </button>
+
+              <button id="mode-btn-mongo" onclick="handleAdminSwitchMode('mongo')" class="px-4 py-2.5 rounded-xl text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-between transition">
+                <span>🍃 Chỉ sử dụng MongoDB (TechStoreDB)</span>
+                <span class="text-[10px] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded uppercase font-bold">NoSQL</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- One-Click Sync Actions -->
+          <div class="bg-slate-950 border border-slate-800 rounded-3xl p-6 space-y-4">
+            <h4 class="font-extrabold text-sm text-white uppercase tracking-wider flex items-center gap-2">
+              <i class="fas fa-sync-alt text-emerald-400"></i>
+              <span>Kích Hoạt Đồng Bộ Dữ Liệu 1-Click</span>
+            </h4>
+            <p class="text-xs text-slate-400">
+              Sao chép và đồng bộ toàn bộ bảng / collection giữa hai cơ sở dữ liệu:
+            </p>
+
+            <div class="space-y-2.5">
+              <button onclick="handleRunSync('sql-to-mongo')" class="w-full py-3 px-4 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/20">
+                <i class="fas fa-arrow-right"></i>
+                <span>Đồng bộ từ SQL Server ➜ MongoDB</span>
+              </button>
+
+              <button onclick="handleRunSync('mongo-to-sql')" class="w-full py-3 px-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/20">
+                <i class="fas fa-arrow-left"></i>
+                <span>Đồng bộ từ MongoDB ➜ SQL Server</span>
+              </button>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Sync Log Terminal & Inspector -->
+        <div class="bg-slate-950 border border-slate-800 rounded-3xl p-6 space-y-4">
+          <div class="flex justify-between items-center">
+            <h4 class="font-extrabold text-sm text-white uppercase tracking-wider flex items-center gap-2">
+              <i class="fas fa-terminal text-indigo-400"></i>
+              <span>Nhật Ký Đồng Bộ & Khám Phá Bản Ghi Trực Tiếp (Raw Inspector)</span>
+            </h4>
+
+            <div class="flex gap-2">
+              <select id="inspect-target" class="bg-slate-800 text-slate-200 text-xs px-2.5 py-1.5 rounded-lg border border-slate-700 focus:outline-none">
+                <option value="sql">SQL Server</option>
+                <option value="mongo">MongoDB</option>
+              </select>
+              <select id="inspect-collection" class="bg-slate-800 text-slate-200 text-xs px-2.5 py-1.5 rounded-lg border border-slate-700 focus:outline-none">
+                <option value="Products">Products</option>
+                <option value="Categories">Categories</option>
+                <option value="Orders">Orders</option>
+                <option value="Users">Users</option>
+              </select>
+              <button onclick="handleInspectRawData()" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-bold transition">
+                Xem mẫu
+              </button>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <!-- Terminal Log -->
+            <div>
+              <div class="text-[11px] font-bold text-slate-400 mb-1">Nhật ký hệ thống:</div>
+              <pre id="sync-terminal-log" class="bg-black/60 border border-slate-800 text-emerald-400 p-4 rounded-2xl text-xs h-48 overflow-y-auto leading-relaxed">
+[System Ready] Sẵn sàng thực hiện tác vụ đồng bộ giữa SQL Server và MongoDB.
+[Database Info] SQL Server (SQLEXPRESS2025) và MongoDB (8.0) đang kết nối thành công.</pre>
+            </div>
+
+            <!-- Raw Data Preview -->
+            <div>
+              <div class="text-[11px] font-bold text-slate-400 mb-1">Kết quả bản ghi mẫu từ CSDL:</div>
+              <pre id="inspect-raw-output" class="bg-black/60 border border-slate-800 text-indigo-300 p-4 rounded-2xl text-xs h-48 overflow-y-auto leading-relaxed">
+Chọn đối tượng và nhấn "Xem mẫu" để kiểm tra bản ghi thực tế từ CSDL...</pre>
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+    </main>
+  </div>
+
+  <!-- ============================================================== -->
+  <!-- MODALS -->
+  <!-- ============================================================== -->
+
+  <!-- 1. PRODUCT FORM MODAL (Add & Edit) -->
+  <div id="product-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 sm:p-8 relative">
+      <button onclick="closeModal('product-modal')" class="absolute right-4 top-4 w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-400 text-xs flex items-center justify-center transition">
+        <i class="fas fa-times"></i>
+      </button>
+
+      <h3 id="product-modal-title" class="font-extrabold text-base text-white mb-6">Thêm Sản Phẩm Mới</h3>
+
+      <form id="product-form" onsubmit="handleSaveProduct(event)" class="space-y-4 text-xs">
+        <div>
+          <label class="block font-bold text-slate-400 mb-1">Tên sản phẩm *</label>
+          <input type="text" name="name" required class="w-full px-3.5 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white focus:outline-none focus:border-indigo-500" />
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block font-bold text-slate-400 mb-1">Thương hiệu</label>
+            <input type="text" name="brand" placeholder="Apple, Samsung, Dell..." class="w-full px-3.5 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white focus:outline-none focus:border-indigo-500" />
+          </div>
+          <div>
+            <label class="block font-bold text-slate-400 mb-1">Danh mục *</label>
+            <select name="category" required class="w-full px-3.5 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white focus:outline-none focus:border-indigo-500">
+              <option value="phone">Điện thoại</option>
+              <option value="laptop">Laptop</option>
+              <option value="tablet">Máy tính bảng</option>
+              <option value="audio">Âm thanh</option>
+              <option value="watch">Đồng hồ</option>
+              <option value="camera">Máy ảnh</option>
+              <option value="smarthome">Nhà thông minh</option>
+              <option value="accessories">Phụ kiện</option>
+            </select>
+            <input type="hidden" name="categoryName" value="" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block font-bold text-slate-400 mb-1">Giá bán (VND) *</label>
+            <input type="number" name="price" required class="w-full px-3.5 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white focus:outline-none focus:border-indigo-500" />
+          </div>
+          <div>
+            <label class="block font-bold text-slate-400 mb-1">Giá gốc (VND)</label>
+            <input type="number" name="oldPrice" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white focus:outline-none focus:border-indigo-500" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block font-bold text-slate-400 mb-1">Tình trạng tồn kho</label>
+            <select name="stock" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white focus:outline-none focus:border-indigo-500">
+              <option value="Sẵn hàng">Sẵn hàng</option>
+              <option value="Hết hàng">Hết hàng</option>
+              <option value="Đặt trước">Đặt trước</option>
+            </select>
+          </div>
+          <div>
+            <label class="block font-bold text-slate-400 mb-1">Huy hiệu (Badge)</label>
+            <input type="text" name="badge" placeholder="Mới, Hot, Best Seller..." class="w-full px-3.5 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white focus:outline-none focus:border-indigo-500" />
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-400 mb-1">Link ảnh đại diện (URL)</label>
+          <input type="url" name="image" placeholder="https://..." class="w-full px-3.5 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white focus:outline-none focus:border-indigo-500" />
+        </div>
+
+        <div class="flex items-center gap-4 p-3 bg-slate-800/60 rounded-xl border border-slate-700">
+          <label class="flex items-center gap-2 cursor-pointer">
+            <input type="checkbox" name="flashSale" class="w-4 h-4 rounded text-indigo-600 bg-slate-700 border-slate-600" />
+            <span class="font-bold text-slate-300">Bật Flash Sale</span>
+          </label>
+          <div class="flex items-center gap-2">
+            <span class="text-slate-400">Giảm thêm %:</span>
+            <input type="number" name="flashDiscount" value="0" class="w-20 px-2 py-1 rounded-lg bg-slate-700 border border-slate-600 text-white" />
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-400 mb-1">Mô tả sản phẩm</label>
+          <textarea name="description" rows="3" class="w-full px-3.5 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white focus:outline-none focus:border-indigo-500"></textarea>
+        </div>
+
+        <div class="pt-4 border-t border-slate-800 flex justify-end gap-2">
+          <button type="button" onclick="closeModal('product-modal')" class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold transition">Hủy</button>
+          <button type="submit" class="px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold transition shadow-lg shadow-indigo-600/30">Lưu Sản Phẩm</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 2. ORDER DETAIL MODAL -->
+  <div id="order-detail-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+    <div class="bg-white text-slate-900 rounded-3xl max-w-xl w-full max-h-[90vh] overflow-y-auto p-6 relative">
+      <button onclick="closeModal('order-detail-modal')" class="absolute right-4 top-4 w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 text-xs flex items-center justify-center transition">
+        <i class="fas fa-times"></i>
+      </button>
+
+      <div class="flex items-center gap-2 mb-4">
+        <div class="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-sm">
+          <i class="fas fa-receipt"></i>
+        </div>
+        <h4 class="font-extrabold text-base text-slate-800">Chi Tiết Hóa Đơn Bán Hàng</h4>
+      </div>
+
+      <div id="order-detail-content">
+        <!-- Rendered by admin.js -->
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. USER MODAL -->
+  <div id="user-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-md w-full p-6 relative">
+      <button onclick="closeModal('user-modal')" class="absolute right-4 top-4 w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-400 text-xs flex items-center justify-center transition">
+        <i class="fas fa-times"></i>
+      </button>
+      <h3 class="font-extrabold text-base text-white mb-4">Thêm Người Dùng Mới</h3>
+      <form onsubmit="handleCreateUser(event)" class="space-y-3 text-xs">
+        <div>
+          <label class="block font-bold text-slate-400 mb-1">Tên đăng nhập *</label>
+          <input type="text" name="username" required class="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white focus:outline-none" />
+        </div>
+        <div>
+          <label class="block font-bold text-slate-400 mb-1">Mật khẩu *</label>
+          <input type="password" name="password" required class="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white focus:outline-none" />
+        </div>
+        <div>
+          <label class="block font-bold text-slate-400 mb-1">Họ và tên</label>
+          <input type="text" name="fullName" class="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white focus:outline-none" />
+        </div>
+        <div>
+          <label class="block font-bold text-slate-400 mb-1">Email</label>
+          <input type="email" name="email" class="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white focus:outline-none" />
+        </div>
+        <div>
+          <label class="block font-bold text-slate-400 mb-1">Vai trò</label>
+          <select name="role" class="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white focus:outline-none">
+            <option value="user">Khách hàng (User)</option>
+            <option value="admin">Quản trị viên (Admin)</option>
+          </select>
+        </div>
+        <button type="submit" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl transition mt-4">
+          Tạo Người Dùng
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- 4. CATEGORY MODAL -->
+  <div id="category-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-md w-full p-6 relative">
+      <button onclick="closeModal('category-modal')" class="absolute right-4 top-4 w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-400 text-xs flex items-center justify-center transition">
+        <i class="fas fa-times"></i>
+      </button>
+      <h3 class="font-extrabold text-base text-white mb-4">Thêm Danh Mục Ngành Hàng</h3>
+      <form onsubmit="handleCreateCategory(event)" class="space-y-3 text-xs">
+        <div>
+          <label class="block font-bold text-slate-400 mb-1">Mã Slug (Ví dụ: gaming, monitor) *</label>
+          <input type="text" name="catId" required class="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white focus:outline-none" />
+        </div>
+        <div>
+          <label class="block font-bold text-slate-400 mb-1">Tên danh mục *</label>
+          <input type="text" name="catName" required class="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white focus:outline-none" />
+        </div>
+        <div>
+          <label class="block font-bold text-slate-400 mb-1">Icon FontAwesome (Ví dụ: fa-gamepad, fa-tv)</label>
+          <input type="text" name="catIcon" placeholder="fa-tag" class="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white focus:outline-none" />
+        </div>
+        <div>
+          <label class="block font-bold text-slate-400 mb-1">Thứ tự hiển thị</label>
+          <input type="number" name="catOrder" value="10" class="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white focus:outline-none" />
+        </div>
+        <button type="submit" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl transition mt-4">
+          Lưu Danh Mục
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="/js/api.js"></script>
+  <script src="/js/store.js"></script>
+  <script src="/js/admin.js"></script>
+</body>
+</html>
+
